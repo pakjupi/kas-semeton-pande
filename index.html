@@ -141,7 +141,7 @@
       </section>
      </div>
      <div class="no-print mt-5 flex flex-col gap-3 sm:flex-row">
-      <label class="relative flex-1"><span class="sr-only">Cari anggota</span><i data-lucide="search" class="absolute left-3 top-3 w-4 text-[#816f60]"></i><input id="income-search" type="search" class="w-full rounded-xl border border-[#e6d8c2] bg-white py-3 pl-10 pr-3" placeholder="Cari nama anggota..."></label> <select id="income-month-filter" aria-label="Filter bulan iuran" class="rounded-xl border border-[#e6d8c2] bg-white px-3 py-3"></select> <button id="print-income" type="button" class="flex items-center justify-center gap-2 rounded-xl bg-[#eadfce] px-4 py-3 font-bold text-[#3d291d]"><i data-lucide="printer" class="w-4"></i><span data-template-id="income-print-label" class="canva-text" style="color: rgb(61, 41, 29); font-weight: 700; font-style: normal; font-size: 15px;">Print pemasukan</span></button> <button type="button" data-action="add-income" class="flex items-center justify-center gap-2 rounded-xl bg-[#70472d] px-4 py-3 font-bold text-white"><i data-lucide="plus" class="w-4"></i><span data-template-id="add-income-label" class="canva-text" style="color: rgb(255, 255, 255); font-weight: 700; font-style: normal; font-size: 15px;">Tambah pemasukan</span></button>
+      <label class="relative flex-1"><span class="sr-only">Cari anggota</span><i data-lucide="search" class="absolute left-3 top-3 w-4 text-[#816f60]"></i><input id="income-search" type="search" class="w-full rounded-xl border border-[#e6d8c2] bg-white py-3 pl-10 pr-3" placeholder="Cari nama anggota..."></label> <select id="income-sort" aria-label="Urutkan nama anggota" class="rounded-xl border border-[#e6d8c2] bg-white px-3 py-3"><option value="desc" selected>Nama Z-A</option><option value="asc">Nama A-Z</option></select> <select id="income-month-filter" aria-label="Filter bulan iuran" class="rounded-xl border border-[#e6d8c2] bg-white px-3 py-3"></select> <button id="print-income" type="button" class="flex items-center justify-center gap-2 rounded-xl bg-[#eadfce] px-4 py-3 font-bold text-[#3d291d]"><i data-lucide="printer" class="w-4"></i><span data-template-id="income-print-label" class="canva-text" style="color: rgb(61, 41, 29); font-weight: 700; font-style: normal; font-size: 15px;">Print pemasukan</span></button> <button type="button" data-action="add-income" class="flex items-center justify-center gap-2 rounded-xl bg-[#70472d] px-4 py-3 font-bold text-white"><i data-lucide="plus" class="w-4"></i><span data-template-id="add-income-label" class="canva-text" style="color: rgb(255, 255, 255); font-weight: 700; font-style: normal; font-size: 15px;">Tambah pemasukan</span></button>
      </div>
      <div class="print-only mt-5">
       <h2 class="serif text-2xl font-bold">Daftar Iuran Anggota</h2>
@@ -157,7 +157,7 @@
     </section>
     <section id="anggota-view" class="view max-w-7xl px-5 md:px-9">
      <div class="no-print flex flex-col gap-3 sm:flex-row">
-      <label class="relative flex-1"><span class="sr-only">Cari anggota</span><i data-lucide="search" class="absolute left-3 top-3 w-4 text-[#816f60]"></i><input id="member-search" type="search" placeholder="Cari nama anggota..." class="w-full rounded-xl border border-[#e6d8c2] bg-white py-3 pl-10 pr-3"></label> <button type="button" data-action="add-member" class="flex items-center gap-2 rounded-xl bg-[#70472d] px-4 py-3 font-bold text-white"><i data-lucide="user-plus" class="w-4"></i><span data-template-id="add-member-label" class="canva-text" style="color: rgb(255, 255, 255); font-weight: 700; font-style: normal; font-size: 15px;">Tambah anggota</span></button>
+      <label class="relative flex-1"><span class="sr-only">Cari anggota</span><i data-lucide="search" class="absolute left-3 top-3 w-4 text-[#816f60]"></i><input id="member-search" type="search" placeholder="Cari nama anggota..." class="w-full rounded-xl border border-[#e6d8c2] bg-white py-3 pl-10 pr-3"></label> <select id="member-sort" aria-label="Urutkan nama anggota" class="rounded-xl border border-[#e6d8c2] bg-white px-3 py-3"><option value="desc" selected>Nama Z-A</option><option value="asc">Nama A-Z</option></select> <button type="button" data-action="add-member" class="flex items-center gap-2 rounded-xl bg-[#70472d] px-4 py-3 font-bold text-white"><i data-lucide="user-plus" class="w-4"></i><span data-template-id="add-member-label" class="canva-text" style="color: rgb(255, 255, 255); font-weight: 700; font-style: normal; font-size: 15px;">Tambah anggota</span></button>
      </div>
      <div id="member-list" class="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3"></div>
     </section>
@@ -367,11 +367,12 @@
       document.getElementById("initial-balance-input").value=opening()||"";
       const query=document.getElementById("income-search").value.toLowerCase();
       const filter=document.getElementById("income-month-filter").value;
+      const sortDir=document.getElementById("income-sort").value;
       const box=document.getElementById("income-list");
       box.replaceChildren();
       let count=0;
 
-      typed("member").filter(member=>clean(member.name).toLowerCase().includes(query)).forEach(member=>{
+      typed("member").filter(member=>clean(member.name).toLowerCase().includes(query)).sort((a,b)=>sortDir==="asc"?clean(a.name).localeCompare(clean(b.name),"id"):clean(b.name).localeCompare(clean(a.name),"id")).forEach(member=>{
         const record=income().find(row=>row.name===member.name);
         const paid=(record?.month_paid||"").split(",").filter(Boolean);
         if(filter&&!paid.includes(filter))return;
@@ -404,9 +405,10 @@
 
     function renderMembers(){
       const query=document.getElementById("member-search").value.toLowerCase();
+      const sortDir=document.getElementById("member-sort").value;
       const box=document.getElementById("member-list");
       box.replaceChildren();
-      const rows=typed("member").filter(row=>clean(row.name).toLowerCase().includes(query));
+      const rows=typed("member").filter(row=>clean(row.name).toLowerCase().includes(query)).sort((a,b)=>sortDir==="asc"?clean(a.name).localeCompare(clean(b.name),"id"):clean(b.name).localeCompare(clean(a.name),"id"));
       if(!rows.length){empty(box,"Belum ada anggota untuk ditampilkan.");return;}
       rows.forEach(row=>{
         const item=document.createElement("article");
@@ -567,9 +569,9 @@
       toast("Tahun pencatatan "+year+" aktif.");
     });
 
-    ["income-search","income-month-filter"].forEach(id=>document.getElementById(id).addEventListener("input",renderIncome));
+    ["income-search","income-month-filter","income-sort"].forEach(id=>document.getElementById(id).addEventListener("input",renderIncome));
     ["expense-search","expense-period"].forEach(id=>document.getElementById(id).addEventListener("input",renderExpenses));
-    document.getElementById("member-search").addEventListener("input",renderMembers);
+    ["member-search","member-sort"].forEach(id=>document.getElementById(id).addEventListener("input",renderMembers));
 
     document.getElementById("close-modal").onclick=document.getElementById("cancel-modal").onclick=()=>document.getElementById("modal").classList.remove("open");
     document.getElementById("delete-cancel").onclick=()=>document.getElementById("confirm-modal").classList.remove("open");
