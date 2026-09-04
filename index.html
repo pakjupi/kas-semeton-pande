@@ -450,7 +450,7 @@
       rows.forEach(row=>{
         const item=document.createElement("article");
         item.className="record-row flex justify-between gap-3 p-4";
-        item.innerHTML='<div><b>'+escapeHtml(clean(row.description))+'</b><p class="mt-1 text-xs text-[#816f60]">'+escapeHtml(clean(row.date))+" · "+escapeHtml(clean(row.category))+" · "+escapeHtml(clean(row.responsible))+'</p></div><div class="text-right"><b class="text-[#b75b4b]">'+rupiah(row.amount)+"</b>"+actionButtons(row)+"</div>";
+        item.innerHTML='<div><b>'+escapeHtml(clean(row.description))+'</b><p class="mt-1 text-xs text-[#816f60]">'+escapeHtml(clean(row.date))+" · "+escapeHtml(clean(row.category))+" · Penanggung jawab : "+escapeHtml(clean(row.responsible))+'</p></div><div class="text-right"><b class="text-[#b75b4b]">'+rupiah(row.amount)+"</b>"+actionButtons(row)+"</div>";
         box.append(item);
       });
       lucide.createIcons();
