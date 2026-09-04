@@ -73,7 +73,7 @@
       <p data-template-id="header-subtitle" class="canva-text mt-2 text-sm" style="color: rgb(129, 111, 96); font-weight: 400; font-style: normal; font-size: 14px;">Kas yang tertata, kekeluargaan yang terjaga.</p>
      </div>
      <div class="flex flex-col items-start gap-2 sm:items-end">
-      <label for="year-input" data-template-id="year-label" class="canva-text text-xs font-bold" style="color: rgb(112, 71, 45); font-weight: 700; font-style: normal; font-size: 12px;">Tahun pencatatan</label>
+      <label for="year-input" class="sr-only">Tahun pencatatan</label>
       <div class="flex items-center gap-2">
        <input id="year-input" type="number" min="2000" max="2100" step="1" class="w-32 rounded-xl border border-[#e6d8c2] bg-white px-3 py-2 text-sm font-bold text-[#3d291d]">
        <button id="admin-toggle-btn" type="button" aria-label="Masuk sebagai Admin" title="Masuk sebagai Admin" class="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-xl border border-[#e6d8c2] bg-white text-[#70472d]"><i data-lucide="log-in" class="guest-only w-4"></i><i data-lucide="shield-check" class="admin-only w-4"></i></button>
@@ -81,6 +81,7 @@
      </div>
     </header>
     <section id="dashboard-view" class="view active max-w-7xl px-5 md:px-9">
+     <button type="button" data-view="pemasukan" class="mb-5 flex w-full items-center justify-center gap-2 rounded-xl bg-[#70472d] px-4 py-3 font-bold text-white md:hidden"><i data-lucide="wallet" class="w-4"></i><span>Lihat rekapan pembayaran uang kas</span></button>
      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
       <article data-template-id="stat-balance" class="canva-card stat-card rounded-2xl p-5" style="background: rgb(255, 255, 255);">
        <div class="flex justify-between">
@@ -102,7 +103,7 @@
       </article>
       <article data-template-id="stat-members" class="canva-card stat-card rounded-2xl p-5" style="background: rgb(255, 255, 255);">
        <div class="flex justify-between">
-        <p data-template-id="stat-members-label" class="canva-text text-sm font-semibold" style="color: rgb(129, 111, 96); font-weight: 600; font-style: normal; font-size: 14px;">Saldo tahun lalu</p><i data-lucide="history" class="w-5 text-[#8a623e]"></i>
+        <p data-template-id="stat-members-label" class="canva-text text-sm font-semibold" style="color: rgb(129, 111, 96); font-weight: 600; font-style: normal; font-size: 14px;">Saldo kas tahun lalu</p><i data-lucide="history" class="w-5 text-[#8a623e]"></i>
        </div>
        <p id="prev-balance-value" class="serif mt-5 text-2xl font-bold">Rp0</p>
       </article>
@@ -176,7 +177,7 @@
      <article data-template-id="report-paper" class="canva-panel mt-4 rounded-2xl border p-5 md:p-8" style="background: rgb(255, 255, 255);">
       <h3 data-template-id="report-title" class="canva-text serif font-bold" style="color: rgb(61, 41, 29); font-weight: 700; font-style: normal; font-size: 20px;">Laporan Keuangan Kas</h3>
       <p data-template-id="report-subtitle" class="canva-text mt-2 text-sm" style="color: rgb(129, 111, 96); font-weight: 400; font-style: normal; font-size: 14px;">Rekap pemasukan, pengeluaran, dan saldo akhir untuk tahun yang dipilih.</p>
-      <div class="mt-6 grid gap-3 sm:grid-cols-3">
+      <div class="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
        <div class="rounded-xl bg-[#e5ead9] p-4">
         <p data-template-id="report-income-label" class="canva-text text-sm" style="color: rgb(115, 93, 74); font-weight: 400; font-style: normal; font-size: 14px;">Total pemasukan</p>
         <p id="report-income" class="serif mt-2 text-xl font-bold text-[#54714f]">Rp0</p>
@@ -188,6 +189,10 @@
        <div class="rounded-xl bg-[#f0e5d2] p-4">
         <p data-template-id="report-balance-label" class="canva-text text-sm" style="color: rgb(115, 93, 74); font-weight: 400; font-style: normal; font-size: 14px;">Saldo akhir</p>
         <p id="report-balance" class="serif mt-2 text-xl font-bold">Rp0</p>
+       </div>
+       <div class="rounded-xl bg-[#ecdfc8] p-4">
+        <p class="canva-text text-sm" style="color: rgb(115, 93, 74); font-weight: 400; font-style: normal; font-size: 14px;">Saldo kas tahun lalu</p>
+        <p id="report-prev-balance" class="serif mt-2 text-xl font-bold text-[#8a623e]">Rp0</p>
        </div>
       </div>
       <div class="mt-8 grid gap-7 lg:grid-cols-2">
@@ -484,6 +489,7 @@
     function renderReport(){
       const data=totals();
       ["income","expense","balance"].forEach(key=>document.getElementById("report-"+key).textContent=rupiah(data[key]));
+      document.getElementById("report-prev-balance").textContent=rupiah(opening());
       const months=document.getElementById("report-months");
       const categories=document.getElementById("report-categories");
       months.replaceChildren(); categories.replaceChildren();
@@ -504,7 +510,10 @@
 
       if(!Object.keys(monthly).length)months.innerHTML="<p class='text-sm text-[#816f60]'>Belum ada transaksi.</p>";
       Object.entries(monthly).sort().reverse().forEach(([key,value])=>{
-        months.innerHTML+='<div class="flex justify-between gap-2 border-b border-[#eee3d3] pb-2 text-sm"><span>'+key+'</span><span class="text-[#54714f]">+'+rupiah(value.income)+'</span><span class="text-[#b75b4b]">−'+rupiah(value.expense)+"</span></div>";
+        const [yearPart,monthPart]=key.split("-");
+        const monthLabel=monthPart?(MONTHS[Number(monthPart)-1]||monthPart):key;
+        const yearLabel=monthPart?yearPart:"";
+        months.innerHTML+='<div class="flex flex-wrap items-center justify-between gap-2 border-b border-[#eee3d3] pb-2 text-sm"><span class="flex items-baseline gap-2"><b>'+escapeHtml(monthLabel)+'</b>'+(yearLabel?'<span class="text-xs text-[#816f60]">'+escapeHtml(yearLabel)+"</span>":"")+'</span><span class="flex gap-2"><span class="text-[#54714f]">+'+rupiah(value.income)+'</span><span class="text-[#b75b4b]">−'+rupiah(value.expense)+"</span></span></div>";
       });
 
       const map={};
