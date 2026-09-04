@@ -38,6 +38,9 @@
       .print-only{display:block!important}
     }
     .print-only{display:none}
+    body:not(.is-admin) .admin-only{display:none!important}
+    body.is-admin .guest-only{display:none!important}
+    .month-check:disabled+span{opacity:.45;cursor:not-allowed}
   </style>
  </head>
  <body data-template-id="__page-root" class="w-full" style="background: rgb(251, 247, 239);">
@@ -70,8 +73,11 @@
       <p data-template-id="header-subtitle" class="canva-text mt-2 text-sm" style="color: rgb(129, 111, 96); font-weight: 400; font-style: normal; font-size: 14px;">Kas yang tertata, kekeluargaan yang terjaga.</p>
      </div>
      <div class="flex flex-col items-start gap-2 sm:items-end">
-      <label for="year-input" data-template-id="year-label" class="canva-text text-xs font-bold" style="color: rgb(112, 71, 45); font-weight: 700; font-style: normal; font-size: 12px;">Tahun pencatatan</label> <input id="year-input" type="number" min="2000" max="2100" step="1" class="w-32 rounded-xl border border-[#e6d8c2] bg-white px-3 py-2 text-sm font-bold text-[#3d291d]" aria-describedby="year-help">
-      <p id="year-help" class="text-xs text-[#816f60]">Gunakan panah naik atau turun untuk memilih tahun.</p>
+      <label for="year-input" data-template-id="year-label" class="canva-text text-xs font-bold" style="color: rgb(112, 71, 45); font-weight: 700; font-style: normal; font-size: 12px;">Tahun pencatatan</label>
+      <div class="flex items-center gap-2">
+       <input id="year-input" type="number" min="2000" max="2100" step="1" class="w-32 rounded-xl border border-[#e6d8c2] bg-white px-3 py-2 text-sm font-bold text-[#3d291d]">
+       <button id="admin-toggle-btn" type="button" aria-label="Masuk sebagai Admin" title="Masuk sebagai Admin" class="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-xl border border-[#e6d8c2] bg-white text-[#70472d]"><i data-lucide="log-in" class="guest-only w-4"></i><i data-lucide="shield-check" class="admin-only w-4"></i></button>
+      </div>
      </div>
     </header>
     <section id="dashboard-view" class="view active max-w-7xl px-5 md:px-9">
@@ -96,9 +102,9 @@
       </article>
       <article data-template-id="stat-members" class="canva-card stat-card rounded-2xl p-5" style="background: rgb(255, 255, 255);">
        <div class="flex justify-between">
-        <p data-template-id="stat-members-label" class="canva-text text-sm font-semibold" style="color: rgb(129, 111, 96); font-weight: 600; font-style: normal; font-size: 14px;">Jumlah anggota</p><i data-lucide="users" class="w-5 text-[#8a623e]"></i>
+        <p data-template-id="stat-members-label" class="canva-text text-sm font-semibold" style="color: rgb(129, 111, 96); font-weight: 600; font-style: normal; font-size: 14px;">Saldo tahun lalu</p><i data-lucide="history" class="w-5 text-[#8a623e]"></i>
        </div>
-       <p id="members-value" class="serif mt-5 text-2xl font-bold">0</p>
+       <p id="prev-balance-value" class="serif mt-5 text-2xl font-bold">Rp0</p>
       </article>
      </div>
      <div class="mt-5 grid gap-5 lg:grid-cols-5">
@@ -116,7 +122,7 @@
      </div>
     </section>
     <section id="pemasukan-view" class="view max-w-7xl px-5 md:px-9">
-     <div class="grid gap-5 lg:grid-cols-2">
+     <div class="no-print admin-only grid gap-5 lg:grid-cols-2">
       <section data-template-id="initial-balance-card" class="canva-card rounded-2xl p-5" style="background: rgb(240, 229, 210);">
        <div class="flex gap-3"><i data-lucide="piggy-bank" class="mt-1 w-5 text-[#70472d]"></i>
         <div>
@@ -141,23 +147,25 @@
       </section>
      </div>
      <div class="no-print mt-5 flex flex-col gap-3 sm:flex-row">
-      <label class="relative flex-1"><span class="sr-only">Cari anggota</span><i data-lucide="search" class="absolute left-3 top-3 w-4 text-[#816f60]"></i><input id="income-search" type="search" class="w-full rounded-xl border border-[#e6d8c2] bg-white py-3 pl-10 pr-3" placeholder="Cari nama anggota..."></label> <select id="income-month-filter" aria-label="Filter bulan iuran" class="rounded-xl border border-[#e6d8c2] bg-white px-3 py-3"></select> <select id="income-sort" aria-label="Urutan nama anggota" class="rounded-xl border border-[#e6d8c2] bg-white px-3 py-3"><option value="desc" selected>Z - A (Descending)</option><option value="asc">A - Z (Ascending)</option></select> <button id="print-income" type="button" class="flex items-center justify-center gap-2 rounded-xl bg-[#eadfce] px-4 py-3 font-bold text-[#3d291d]"><i data-lucide="printer" class="w-4"></i><span data-template-id="income-print-label" class="canva-text" style="color: rgb(61, 41, 29); font-weight: 700; font-style: normal; font-size: 15px;">Print pemasukan</span></button> <button type="button" data-action="add-income" class="flex items-center justify-center gap-2 rounded-xl bg-[#70472d] px-4 py-3 font-bold text-white"><i data-lucide="plus" class="w-4"></i><span data-template-id="add-income-label" class="canva-text" style="color: rgb(255, 255, 255); font-weight: 700; font-style: normal; font-size: 15px;">Tambah pemasukan</span></button>
+      <label class="relative flex-1"><span class="sr-only">Cari anggota</span><i data-lucide="search" class="absolute left-3 top-3 w-4 text-[#816f60]"></i><input id="income-search" type="search" class="w-full rounded-xl border border-[#e6d8c2] bg-white py-3 pl-10 pr-3" placeholder="Cari nama anggota..."></label> <select id="income-month-filter" aria-label="Filter bulan iuran" class="rounded-xl border border-[#e6d8c2] bg-white px-3 py-3"></select> <select id="income-sort" aria-label="Urutan nama anggota" class="rounded-xl border border-[#e6d8c2] bg-white px-3 py-3"><option value="desc" selected>Descending</option><option value="asc">Ascending</option></select> <button id="print-income" type="button" class="flex items-center justify-center gap-2 rounded-xl bg-[#eadfce] px-4 py-3 font-bold text-[#3d291d]"><i data-lucide="printer" class="w-4"></i><span data-template-id="income-print-label" class="canva-text" style="color: rgb(61, 41, 29); font-weight: 700; font-style: normal; font-size: 15px;">Print pemasukan</span></button> <button type="button" data-action="add-income" class="admin-only flex items-center justify-center gap-2 rounded-xl bg-[#70472d] px-4 py-3 font-bold text-white"><i data-lucide="plus" class="w-4"></i><span data-template-id="add-income-label" class="canva-text" style="color: rgb(255, 255, 255); font-weight: 700; font-style: normal; font-size: 15px;">Tambah pemasukan lain</span></button>
      </div>
      <div class="print-only mt-5">
       <h2 class="serif text-2xl font-bold">Daftar Iuran Anggota</h2>
       <p id="income-print-year" class="text-sm"></p>
      </div>
      <div id="income-list" class="mt-5 overflow-hidden rounded-2xl border border-[#e6d8c2] bg-white"></div>
+     <h3 class="serif mt-8 text-lg font-bold">Pemasukan lainnya (di luar iuran anggota)</h3>
+     <div id="other-income-list" class="mt-3 overflow-hidden rounded-2xl border border-[#e6d8c2] bg-white"></div>
     </section>
     <section id="pengeluaran-view" class="view max-w-7xl px-5 md:px-9">
      <div class="no-print flex flex-col gap-3 sm:flex-row">
-      <label class="relative flex-1"><span class="sr-only">Cari pengeluaran</span><i data-lucide="search" class="absolute left-3 top-3 w-4 text-[#816f60]"></i><input id="expense-search" type="search" placeholder="Cari keterangan atau kategori..." class="w-full rounded-xl border border-[#e6d8c2] bg-white py-3 pl-10 pr-3"></label> <input id="expense-period" type="month" aria-label="Filter periode pengeluaran" class="rounded-xl border border-[#e6d8c2] bg-white px-3 py-3"> <button type="button" data-action="add-expense" class="flex items-center gap-2 rounded-xl bg-[#70472d] px-4 py-3 font-bold text-white"><i data-lucide="plus" class="w-4"></i><span data-template-id="add-expense-label" class="canva-text" style="color: rgb(255, 255, 255); font-weight: 700; font-style: normal; font-size: 15px;">Tambah pengeluaran</span></button>
+      <label class="relative flex-1"><span class="sr-only">Cari pengeluaran</span><i data-lucide="search" class="absolute left-3 top-3 w-4 text-[#816f60]"></i><input id="expense-search" type="search" placeholder="Cari keterangan atau kategori..." class="w-full rounded-xl border border-[#e6d8c2] bg-white py-3 pl-10 pr-3"></label> <label id="expense-period-wrap" class="relative flex items-center justify-center rounded-xl border border-[#e6d8c2] bg-white p-3 text-[#816f60]" title="Filter periode pengeluaran"><span class="sr-only">Filter periode pengeluaran</span><i data-lucide="calendar" class="pointer-events-none w-4"></i><input id="expense-period" type="month" aria-label="Filter periode pengeluaran" class="absolute inset-0 h-full w-full cursor-pointer opacity-0"></label> <button type="button" data-action="add-expense" class="admin-only flex items-center gap-2 rounded-xl bg-[#70472d] px-4 py-3 font-bold text-white"><i data-lucide="plus" class="w-4"></i><span data-template-id="add-expense-label" class="canva-text" style="color: rgb(255, 255, 255); font-weight: 700; font-style: normal; font-size: 15px;">Tambah pengeluaran</span></button>
      </div>
      <div id="expense-list" class="mt-5 overflow-hidden rounded-2xl border border-[#e6d8c2] bg-white"></div>
     </section>
     <section id="anggota-view" class="view max-w-7xl px-5 md:px-9">
      <div class="no-print flex flex-col gap-3 sm:flex-row">
-      <label class="relative flex-1"><span class="sr-only">Cari anggota</span><i data-lucide="search" class="absolute left-3 top-3 w-4 text-[#816f60]"></i><input id="member-search" type="search" placeholder="Cari nama anggota..." class="w-full rounded-xl border border-[#e6d8c2] bg-white py-3 pl-10 pr-3"></label> <select id="member-sort" aria-label="Urutan nama anggota" class="rounded-xl border border-[#e6d8c2] bg-white px-3 py-3"><option value="desc" selected>Z - A (Descending)</option><option value="asc">A - Z (Ascending)</option></select> <button type="button" data-action="add-member" class="flex items-center gap-2 rounded-xl bg-[#70472d] px-4 py-3 font-bold text-white"><i data-lucide="user-plus" class="w-4"></i><span data-template-id="add-member-label" class="canva-text" style="color: rgb(255, 255, 255); font-weight: 700; font-style: normal; font-size: 15px;">Tambah anggota</span></button>
+      <label class="relative flex-1"><span class="sr-only">Cari anggota</span><i data-lucide="search" class="absolute left-3 top-3 w-4 text-[#816f60]"></i><input id="member-search" type="search" placeholder="Cari nama anggota..." class="w-full rounded-xl border border-[#e6d8c2] bg-white py-3 pl-10 pr-3"></label> <select id="member-sort" aria-label="Urutan nama anggota" class="rounded-xl border border-[#e6d8c2] bg-white px-3 py-3"><option value="desc" selected>Descending</option><option value="asc">Ascending</option></select> <button type="button" data-action="add-member" class="admin-only flex items-center gap-2 rounded-xl bg-[#70472d] px-4 py-3 font-bold text-white"><i data-lucide="user-plus" class="w-4"></i><span data-template-id="add-member-label" class="canva-text" style="color: rgb(255, 255, 255); font-weight: 700; font-style: normal; font-size: 15px;">Tambah anggota</span></button>
      </div>
      <div id="member-list" class="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3"></div>
     </section>
@@ -195,7 +203,7 @@
      </article>
     </section>
     <section id="catatan-view" class="view max-w-7xl px-5 md:px-9">
-     <div class="no-print flex justify-end"><button type="button" data-action="add-note" class="flex items-center gap-2 rounded-xl bg-[#70472d] px-4 py-3 font-bold text-white"><i data-lucide="plus" class="w-4"></i><span data-template-id="add-note-label" class="canva-text" style="color: rgb(255, 255, 255); font-weight: 700; font-style: normal; font-size: 15px;">Tambah catatan</span></button>
+     <div class="no-print flex justify-end"><button type="button" data-action="add-note" class="admin-only flex items-center gap-2 rounded-xl bg-[#70472d] px-4 py-3 font-bold text-white"><i data-lucide="plus" class="w-4"></i><span data-template-id="add-note-label" class="canva-text" style="color: rgb(255, 255, 255); font-weight: 700; font-style: normal; font-size: 15px;">Tambah catatan</span></button>
      </div>
      <div id="note-list" class="mt-5 grid gap-4 md:grid-cols-2"></div>
     </section>
@@ -230,6 +238,22 @@
    </div>
   </div>
   <div id="toast" class="toast fixed bottom-20 left-1/2 z-[60] rounded-xl bg-[#3d291d] px-4 py-3 text-sm font-semibold text-white shadow-xl md:bottom-6" aria-live="polite"></div>
+  <div id="login-modal" class="modal-layer fixed inset-0 z-50 items-center justify-center p-4">
+   <div class="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl">
+    <div class="flex justify-between gap-4">
+     <div>
+      <h3 class="serif text-2xl font-bold">Masuk sebagai Admin</h3>
+      <p class="mt-1 text-sm text-[#816f60]">Hanya admin yang dapat menambah, mengubah, atau menghapus data.</p>
+     </div>
+     <button type="button" id="close-login-modal" aria-label="Tutup" class="rounded-lg p-2"><i data-lucide="x"></i></button>
+    </div>
+    <form id="login-form" class="mt-5 space-y-4">
+     <div><label for="login-username" class="mb-1 block text-sm font-bold">Username</label><input required id="login-username" type="text" autocomplete="username" class="w-full rounded-xl border border-[#e6d8c2] px-3 py-3"></div>
+     <div><label for="login-password" class="mb-1 block text-sm font-bold">Kata sandi</label><input required id="login-password" type="password" autocomplete="current-password" class="w-full rounded-xl border border-[#e6d8c2] px-3 py-3"></div>
+     <button type="submit" class="w-full rounded-xl bg-[#70472d] px-4 py-3 font-bold text-white">Masuk</button>
+    </form>
+   </div>
+  </div>
 
   <!-- ======================= FIREBASE ======================= -->
   <!-- 1. Buat project di https://console.firebase.google.com
@@ -238,6 +262,7 @@
        4. Salin konfigurasi Anda dan tempel di bawah ini (ganti semua "GANTI_...") -->
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyB9uEG-x2hEyrLwk1bgcGczoxNdXAqkW64",
@@ -250,6 +275,7 @@
 
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
+    const auth = firebase.auth();
     const recordsCol = db.collection("records");
 
     // Pengganti window.dataSdk milik Canva, dengan interface yang sama persis,
@@ -294,7 +320,7 @@
 
   <script>
     const MONTHS=["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
-    let records=[],activeYear=String(new Date().getFullYear()),formState=null,pendingDelete=null,sdkReady=false;
+    let records=[],activeYear=String(new Date().getFullYear()),formState=null,pendingDelete=null,sdkReady=false,isAdmin=false;
 
     const clean=v=>v||"";
     const rupiah=v=>new Intl.NumberFormat("id-ID",{style:"currency",currency:"IDR",maximumFractionDigits:0}).format(Number(v||0));
@@ -327,16 +353,20 @@
       lucide.createIcons();
     }
 
+    function monthlyIncomeAmount(month){
+      return income().filter(row=>clean(row.month_paid).split(",").filter(Boolean).includes(month)).length*fee();
+    }
+
     function renderDashboard(){
       const data=totals();
       document.getElementById("balance-value").textContent=rupiah(data.balance);
       document.getElementById("income-value").textContent=rupiah(data.income);
       document.getElementById("expense-value").textContent=rupiah(data.expense);
-      document.getElementById("members-value").textContent=typed("member").length;
+      document.getElementById("prev-balance-value").textContent=rupiah(opening());
 
       const chart=document.getElementById("monthly-chart");
       chart.replaceChildren();
-      const values=MONTHS.map((_,index)=>income().filter(row=>clean(row.date).startsWith(activeYear+"-"+String(index+1).padStart(2,"0"))).reduce((sum,row)=>sum+Number(row.amount||0),0));
+      const values=MONTHS.map(month=>monthlyIncomeAmount(month));
       const maximum=Math.max(...values,1);
 
       MONTHS.forEach((month,index)=>{
@@ -359,7 +389,7 @@
     }
 
     function actionButtons(row){
-      return '<div class="flex justify-end gap-1"><button class="p-2 text-[#70472d]" aria-label="Edit" data-edit="'+row.__backendId+'"><i data-lucide="pencil" class="w-4"></i></button><button class="p-2 text-[#b75b4b]" aria-label="Hapus" data-delete="'+row.__backendId+'"><i data-lucide="trash-2" class="w-4"></i></button></div>';
+      return '<div class="admin-only flex justify-end gap-1"><button class="p-2 text-[#70472d]" aria-label="Edit" data-edit="'+row.__backendId+'"><i data-lucide="pencil" class="w-4"></i></button><button class="p-2 text-[#b75b4b]" aria-label="Hapus" data-delete="'+row.__backendId+'"><i data-lucide="trash-2" class="w-4"></i></button></div>';
     }
 
     function renderIncome(){
@@ -377,22 +407,40 @@
         const paid=(record?.month_paid||"").split(",").filter(Boolean);
         if(filter&&!paid.includes(filter))return;
         count++;
-        const checks=MONTHS.map(month=>'<label class="inline-block"><input type="checkbox" class="month-check sr-only" data-member="'+member.__backendId+'" data-month="'+month+'" '+(paid.includes(month)?"checked":"")+'><span class="inline-flex cursor-pointer rounded-md border border-[#e6d8c2] px-2 py-1 text-[10px] font-bold text-[#816f60]">'+month.slice(0,3)+"</span></label>").join("");
+        const checks=MONTHS.map(month=>'<label class="inline-block"><input type="checkbox" class="month-check sr-only" data-member="'+member.__backendId+'" data-month="'+month+'" '+(paid.includes(month)?"checked":"")+" "+(isAdmin?"":"disabled")+'><span class="inline-flex cursor-pointer rounded-md border border-[#e6d8c2] px-2 py-1 text-[10px] font-bold text-[#816f60]">'+month.slice(0,3)+"</span></label>").join("");
         const card=document.createElement("article");
         card.className="record-row p-4";
         card.innerHTML='<div class="flex justify-between gap-3"><div><h3 class="font-bold">'+escapeHtml(clean(member.name))+'</h3><p class="mt-1 text-xs text-[#816f60]">Total iuran '+activeYear+': <b class="text-[#54714f]">'+rupiah(paid.length*fee())+"</b></p></div>"+(record?actionButtons(record):"")+'</div><div class="mt-3 flex flex-wrap gap-1">'+checks+"</div>";
         box.append(card);
       });
       if(!count)empty(box,"Belum ada anggota untuk ditampilkan.");
+      renderOtherIncome();
+      lucide.createIcons();
+    }
+
+    function renderOtherIncome(){
+      const box=document.getElementById("other-income-list");
+      box.replaceChildren();
+      const rows=income().filter(row=>row.category!=="Iuran").sort((a,b)=>clean(b.date).localeCompare(clean(a.date)));
+      if(!rows.length){empty(box,"Belum ada pemasukan lain untuk ditampilkan.");return;}
+      rows.forEach(row=>{
+        const item=document.createElement("article");
+        item.className="record-row flex justify-between gap-3 p-4";
+        item.innerHTML='<div><b>'+escapeHtml(clean(row.description))+'</b><p class="mt-1 text-xs text-[#816f60]">'+escapeHtml(clean(row.date))+" · "+escapeHtml(clean(row.category))+'</p></div><div class="text-right"><b class="text-[#54714f]">'+rupiah(row.amount)+"</b>"+actionButtons(row)+"</div>";
+        box.append(item);
+      });
       lucide.createIcons();
     }
 
     function renderExpenses(){
       const query=document.getElementById("expense-search").value.toLowerCase();
       const period=document.getElementById("expense-period").value;
+      document.getElementById("expense-period-wrap").classList.toggle("border-[#70472d]",!!period);
+      document.getElementById("expense-period-wrap").classList.toggle("text-[#70472d]",!!period);
+      document.getElementById("expense-period-wrap").title=period?"Filter periode: "+period:"Filter periode pengeluaran";
       const box=document.getElementById("expense-list");
       box.replaceChildren();
-      const rows=expense().filter(row=>(clean(row.description)+" "+clean(row.category)).toLowerCase().includes(query)&&(!period||clean(row.date).startsWith(period)));
+      const rows=expense().filter(row=>(clean(row.description)+" "+clean(row.category)).toLowerCase().includes(query)&&(!period||clean(row.date).startsWith(period))).sort((a,b)=>clean(b.date).localeCompare(clean(a.date)));
       if(!rows.length){empty(box,"Belum ada pengeluaran untuk ditampilkan.");return;}
       rows.forEach(row=>{
         const item=document.createElement("article");
@@ -441,10 +489,17 @@
       months.replaceChildren(); categories.replaceChildren();
 
       const monthly={};
-      [...income(),...expense()].forEach(row=>{
+      MONTHS.forEach((month,index)=>{
+        const amount=monthlyIncomeAmount(month);
+        if(!amount)return;
+        const key=activeYear+"-"+String(index+1).padStart(2,"0");
+        monthly[key]??={income:0,expense:0};
+        monthly[key].income+=amount;
+      });
+      expense().forEach(row=>{
         const key=clean(row.date).slice(0,7)||"Tanpa tanggal";
         monthly[key]??={income:0,expense:0};
-        monthly[key][row.type==="income"?"income":"expense"]+=Number(row.amount||0);
+        monthly[key].expense+=Number(row.amount||0);
       });
 
       if(!Object.keys(monthly).length)months.innerHTML="<p class='text-sm text-[#816f60]'>Belum ada transaksi.</p>";
@@ -481,7 +536,12 @@
       document.getElementById("modal-title").textContent=(record?"Ubah ":"Tambah ")+({member:"Anggota",income:"Pemasukan",expense:"Pengeluaran",note:"Catatan"}[kind]);
 
       if(kind==="member")fields.innerHTML=input("Nama anggota","field-name","text",clean(record?.name));
-      if(kind==="income")fields.innerHTML=input("Nama anggota","field-name","text",clean(record?.name))+input("Tanggal pembayaran","field-date","date",clean(record?.date)||activeYear+"-01-01")+'<div><label for="field-month" class="mb-1 block text-sm font-bold">Bulan dibayar</label><select id="field-month" multiple required class="h-36 w-full rounded-xl border border-[#e6d8c2] px-3 py-3">'+MONTHS.map(month=>'<option '+(clean(record?.month_paid).split(",").includes(month)?"selected":"")+">"+month+"</option>").join("")+"</select></div>";
+      if(kind==="income"){
+        const isDues=record&&record.category==="Iuran";
+        fields.innerHTML=isDues
+          ?input("Nama anggota","field-name","text",clean(record?.name))+input("Tanggal pembayaran","field-date","date",clean(record?.date)||activeYear+"-01-01")+'<div><label for="field-month" class="mb-1 block text-sm font-bold">Bulan dibayar</label><select id="field-month" multiple required class="h-36 w-full rounded-xl border border-[#e6d8c2] px-3 py-3">'+MONTHS.map(month=>'<option '+(clean(record?.month_paid).split(",").includes(month)?"selected":"")+">"+month+"</option>").join("")+"</select></div>"
+          :input("Keterangan","field-description","text",clean(record?.description))+input("Kategori","field-category","text",clean(record?.category))+input("Jumlah","field-amount","number",clean(record?.amount))+input("Tanggal","field-date","date",clean(record?.date)||activeYear+"-01-01");
+      }
       if(kind==="expense")fields.innerHTML=input("Tanggal","field-date","date",clean(record?.date)||activeYear+"-01-01")+input("Keterangan","field-description","text",clean(record?.description))+input("Kategori","field-category","text",clean(record?.category))+input("Jumlah","field-amount","number",clean(record?.amount))+input("Penanggung jawab","field-responsible","text",clean(record?.responsible));
       if(kind==="note")fields.innerHTML=input("Judul catatan","field-name","text",clean(record?.name))+'<div><label for="field-note" class="mb-1 block text-sm font-bold">Isi catatan</label><textarea id="field-note" required rows="5" class="w-full rounded-xl border border-[#e6d8c2] px-3 py-3">'+escapeHtml(clean(record?.note_content))+"</textarea></div>";
       document.getElementById("modal").classList.add("open");
@@ -489,6 +549,7 @@
 
     async function saveSetting(event,type){
       event.preventDefault();
+      if(!isAdmin){toast("Hanya admin yang dapat mengubah pengaturan.");return;}
       if(!sdkReady){toast("Data belum siap.");return;}
       const old=typed(type).find(row=>String(row.year)===activeYear);
       const record=blank(type);
@@ -507,16 +568,21 @@
       if(view)switchView(view.dataset.view);
 
       const action=event.target.closest("[data-action]");
-      if(action)openForm(action.dataset.action.replace("add-",""));
+      if(action){
+        if(!isAdmin){toast("Hanya admin yang dapat menambah data.");return;}
+        openForm(action.dataset.action.replace("add-",""));
+      }
 
       const edit=event.target.closest("[data-edit]");
       if(edit){
+        if(!isAdmin){toast("Hanya admin yang dapat mengubah data.");return;}
         const record=records.find(row=>row.__backendId===edit.dataset.edit);
         if(record)openForm(record.type,record);
       }
 
       const remove=event.target.closest("[data-delete]");
       if(remove){
+        if(!isAdmin){toast("Hanya admin yang dapat menghapus data.");return;}
         pendingDelete=records.find(row=>row.__backendId===remove.dataset.delete);
         document.getElementById("confirm-modal").classList.add("open");
       }
@@ -524,6 +590,7 @@
 
     document.getElementById("entry-form").addEventListener("submit",async event=>{
       event.preventDefault();
+      if(!isAdmin){toast("Hanya admin yang dapat menyimpan data.");return;}
       if(!sdkReady){toast("Data belum siap.");return;}
       const {kind,record:existing}=formState;
       const record=blank(kind);
@@ -579,7 +646,7 @@
     document.getElementById("delete-cancel").onclick=()=>document.getElementById("confirm-modal").classList.remove("open");
 
     document.getElementById("delete-confirm").onclick=async()=>{
-      if(!pendingDelete||!sdkReady)return;
+      if(!isAdmin||!pendingDelete||!sdkReady)return;
       const button=document.getElementById("delete-confirm");
       button.disabled=true;
       const result=await window.dataSdk.delete(pendingDelete);
@@ -589,7 +656,7 @@
     };
 
     document.getElementById("income-list").addEventListener("change",async event=>{
-      if(!event.target.matches(".month-check")||!sdkReady)return;
+      if(!event.target.matches(".month-check")||!sdkReady||!isAdmin)return;
       const member=typed("member").find(row=>row.__backendId===event.target.dataset.member);
       if(!member)return;
 
@@ -599,8 +666,8 @@
       if(event.target.checked&&!paid.includes(month))paid.push(month);
       if(!event.target.checked)paid.splice(paid.indexOf(month),1);
 
-      if(event.target.checked&&month==="Desember"){
-        MONTHS.slice(0,MONTHS.indexOf("Desember")).forEach(previousMonth=>{
+      if(event.target.checked){
+        MONTHS.slice(0,MONTHS.indexOf(month)).forEach(previousMonth=>{
           if(!paid.includes(previousMonth))paid.push(previousMonth);
         });
       }
@@ -643,6 +710,41 @@
     }
 
     function escapeAttribute(value){return escapeHtml(value);}
+
+    const ADMIN_EMAIL_DOMAIN="@semeton-pande-9967c.firebaseapp.com";
+
+    document.getElementById("admin-toggle-btn").addEventListener("click",()=>{
+      if(isAdmin){auth.signOut();toast("Keluar dari mode admin.");return;}
+      document.getElementById("login-modal").classList.add("open");
+    });
+    document.getElementById("close-login-modal").onclick=()=>document.getElementById("login-modal").classList.remove("open");
+
+    document.getElementById("login-form").addEventListener("submit",async event=>{
+      event.preventDefault();
+      const username=document.getElementById("login-username").value.trim().toLowerCase();
+      const password=document.getElementById("login-password").value;
+      const button=event.submitter;
+      button.disabled=true;
+      try{
+        await auth.signInWithEmailAndPassword(username+ADMIN_EMAIL_DOMAIN,password);
+        document.getElementById("login-modal").classList.remove("open");
+        document.getElementById("login-form").reset();
+        toast("Berhasil masuk sebagai admin.");
+      }catch(error){
+        console.error("Login error:",error);
+        toast("Username atau kata sandi salah.");
+      }
+      button.disabled=false;
+    });
+
+    auth.onAuthStateChanged(user=>{
+      isAdmin=!!user;
+      document.body.classList.toggle("is-admin",isAdmin);
+      const toggleBtn=document.getElementById("admin-toggle-btn");
+      toggleBtn.title=isAdmin?"Keluar dari mode admin":"Masuk sebagai Admin";
+      toggleBtn.setAttribute("aria-label",toggleBtn.title);
+      renderAll();
+    });
 
     clock();
     setInterval(clock,60000);
