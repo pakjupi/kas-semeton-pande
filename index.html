@@ -76,6 +76,7 @@
       <label for="year-input" class="sr-only">Tahun pencatatan</label>
       <div class="flex items-center gap-2">
        <input id="year-input" type="number" min="2000" max="2100" step="1" class="w-32 rounded-xl border border-[#e6d8c2] bg-white px-3 py-2 text-sm font-bold text-[#3d291d]">
+       <button type="button" id="whatsapp-share-btn" aria-label="Bagikan rekap ke WhatsApp" title="Bagikan rekap ke WhatsApp" class="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-xl border border-[#e6d8c2] bg-white text-[#25D366]"><i data-lucide="message-circle" class="w-4"></i></button>
        <button id="admin-toggle-btn" type="button" aria-label="Masuk sebagai Admin" title="Masuk sebagai Admin" class="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-xl border border-[#e6d8c2] bg-white text-[#70472d]"><i data-lucide="log-in" class="guest-only w-4"></i><i data-lucide="shield-check" class="admin-only w-4"></i></button>
       </div>
      </div>
@@ -335,6 +336,10 @@
     const expense=()=>yearRows("expense");
     const fee=()=>Number(typed("setting").find(r=>String(r.year)===activeYear)?.monthly_fee||0);
     const opening=()=>Number(typed("initial_balance").find(r=>String(r.year)===activeYear)?.initial_balance||0);
+    const formatDateID=v=>{
+      const parts=clean(v).split("-");
+      return parts.length===3?Number(parts[2])+"/"+Number(parts[1])+"/"+parts[0]:clean(v);
+    };
     const blank=type=>({type,name:"",description:"",category:"",amount:0,date:"",month_paid:"",responsible:"",note_content:"",monthly_fee:0,year:activeYear,initial_balance:0});
 
     function toast(message){
@@ -721,6 +726,36 @@
     function escapeAttribute(value){return escapeHtml(value);}
 
     const ADMIN_EMAIL_DOMAIN="@semeton-pande-9967c.firebaseapp.com";
+
+    function buildWhatsappRecap(){
+      const now=new Date();
+      const updateDate=now.getDate()+" "+MONTHS[now.getMonth()]+" "+now.getFullYear();
+      let text="• *Catatan Rekap Uang Kas* •\n————————————————\n`Update Terakhir :`\n`"+updateDate+"`\n\n";
+
+      text+="• Rekap Pembayaran Uang Kas :\n";
+      typed("member").forEach(member=>{
+        const record=income().find(row=>row.name===member.name);
+        const paid=(record?.month_paid||"").split(",").filter(Boolean);
+        const indexes=paid.map(month=>MONTHS.indexOf(month)).filter(index=>index>-1);
+        const status=indexes.length?"✅ s/d "+MONTHS[Math.max(...indexes)]+" "+activeYear:"❌ Belum ada pembayaran";
+        text+=clean(member.name)+" : "+status+"\n";
+      });
+
+      text+="\n• Detail Pengeluaran Uang Kas : \n";
+      expense().slice().sort((a,b)=>clean(a.date).localeCompare(clean(b.date))).forEach(row=>{
+        text+=formatDateID(row.date)+" | "+clean(row.description)+" : "+rupiah(row.amount)+"\n";
+      });
+      text+="Total Pengeluaran ("+activeYear+") : "+rupiah(totals().expense)+"\n\n";
+      text+="Link Update Uang Kas : "+window.location.href;
+      return text;
+    }
+
+    document.getElementById("whatsapp-share-btn").addEventListener("click",async()=>{
+      const text=buildWhatsappRecap();
+      try{await navigator.clipboard.writeText(text);toast("Teks rekap disalin, membuka WhatsApp...");}
+      catch(error){console.error("Clipboard error:",error);toast("Membuka WhatsApp...");}
+      window.open("https://wa.me/?text="+encodeURIComponent(text),"_blank");
+    });
 
     document.getElementById("admin-toggle-btn").addEventListener("click",()=>{
       if(isAdmin){auth.signOut();toast("Keluar dari mode admin.");return;}
