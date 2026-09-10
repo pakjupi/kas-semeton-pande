@@ -117,9 +117,9 @@
       </section>
       <section data-template-id="recent-card" class="canva-card stat-card rounded-2xl p-5 lg:col-span-2" style="background: rgb(255, 255, 255);">
        <div class="flex items-center justify-between">
-        <h3 data-template-id="recent-title" class="canva-text font-bold" style="color: rgb(61, 41, 29); font-weight: 700; font-style: normal; font-size: 18px;">Transaksi terbaru</h3><button type="button" data-view="laporan" class="flex items-center gap-1 text-xs font-bold text-[#70472d]"> <span data-template-id="recent-link" class="canva-text" style="color: rgb(112, 71, 45); font-weight: 700; font-style: normal; font-size: 12px;">Lihat laporan</span><i data-lucide="arrow-right" class="w-3"></i> </button>
+        <h3 data-template-id="recent-title" class="canva-text font-bold" style="color: rgb(61, 41, 29); font-weight: 700; font-style: normal; font-size: 18px;">Transaksi terbaru</h3><button type="button" data-view="pengeluaran" class="flex items-center gap-1 text-xs font-bold text-[#70472d]"> <span data-template-id="recent-link" class="canva-text" style="color: rgb(112, 71, 45); font-weight: 700; font-style: normal; font-size: 12px;">Lihat laporan</span><i data-lucide="arrow-right" class="w-3"></i> </button>
        </div>
-       <div id="recent-list" class="mt-4 space-y-3"></div>
+       <div id="recent-list" class="mt-4 max-h-96 space-y-3 overflow-y-auto pr-1"></div>
       </section>
      </div>
     </section>
@@ -388,12 +388,12 @@
 
       const list=document.getElementById("recent-list");
       list.replaceChildren();
-      const rows=[...income(),...expense()].sort((a,b)=>clean(b.date).localeCompare(clean(a.date))).slice(0,4);
+      const rows=expense().slice().sort((a,b)=>clean(b.date).localeCompare(clean(a.date)));
       if(!rows.length){empty(list,"Belum ada transaksi.");return;}
       rows.forEach(row=>{
         const entry=document.createElement("div");
         entry.className="flex justify-between gap-3 text-sm";
-        entry.innerHTML='<div><b>'+escapeHtml(row.type==="income"?clean(row.name):clean(row.description))+'</b><p class="text-xs text-[#816f60]">'+(clean(row.date)||"Tanpa tanggal")+'</p></div><b class="'+(row.type==="income"?"text-[#54714f]":"text-[#b75b4b]")+'">'+(row.type==="income"?"+":"−")+rupiah(row.amount)+"</b>";
+        entry.innerHTML='<div><b>'+escapeHtml(clean(row.description))+'</b><p class="text-xs text-[#816f60]">'+(clean(row.date)||"Tanpa tanggal")+'</p></div><b class="text-[#b75b4b]">−'+rupiah(row.amount)+"</b>";
         list.append(entry);
       });
     }
@@ -546,10 +546,15 @@
     function openForm(kind,record=null){
       formState={kind,record};
       const fields=document.getElementById("form-fields");
-      const input=(label,id,type="text",value="")=>'<div><label for="'+id+'" class="mb-1 block text-sm font-bold">'+label+'</label><input required id="'+id+'" type="'+type+'" value="'+escapeAttribute(value)+'" class="w-full rounded-xl border border-[#e6d8c2] px-3 py-3"></div>';
+      const input=(label,id,type="text",value="",required=true)=>'<div><label for="'+id+'" class="mb-1 block text-sm font-bold">'+label+'</label><input '+(required?"required ":"")+'id="'+id+'" type="'+type+'" value="'+escapeAttribute(value)+'" class="w-full rounded-xl border border-[#e6d8c2] px-3 py-3"></div>';
       document.getElementById("modal-title").textContent=(record?"Ubah ":"Tambah ")+({member:"Anggota",income:"Pemasukan",expense:"Pengeluaran",note:"Catatan"}[kind]);
 
-      if(kind==="member")fields.innerHTML=input("Nama anggota","field-name","text",clean(record?.name));
+      if(kind==="member")fields.innerHTML=input("Nama anggota","field-name","text",clean(record?.name))
+        +'<div><label for="field-whatsapp" class="mb-1 block text-sm font-bold">Nomor WhatsApp</label><input required id="field-whatsapp" type="tel" inputmode="numeric" pattern="08[0-9]{8,12}" title="Nomor harus diawali 08, contoh: 08123456789" placeholder="08123456789" value="'+escapeAttribute(clean(record?.whatsapp))+'" class="w-full rounded-xl border border-[#e6d8c2] px-3 py-3"><p class="mt-1 text-xs text-[#816f60]">Contoh : 08123456789</p></div>'
+        +input("Tanggal lahir","field-birthdate","date",clean(record?.birthdate),false)
+        +input("Nomor rekening","field-account-number","number",clean(record?.account_number),false)
+        +input("Nama bank","field-bank-name","text",clean(record?.bank_name),false)
+        +input("Atas nama rekening","field-account-name","text",clean(record?.account_name),false);
       if(kind==="income"){
         const isDues=record&&record.category==="Iuran";
         fields.innerHTML=isDues
@@ -609,7 +614,14 @@
       const {kind,record:existing}=formState;
       const record=blank(kind);
 
-      if(kind==="member")record.name=document.getElementById("field-name").value.trim();
+      if(kind==="member"){
+        record.name=document.getElementById("field-name").value.trim();
+        record.whatsapp=document.getElementById("field-whatsapp").value.trim();
+        record.birthdate=document.getElementById("field-birthdate").value;
+        record.account_number=document.getElementById("field-account-number").value.trim();
+        record.bank_name=document.getElementById("field-bank-name").value.trim();
+        record.account_name=document.getElementById("field-account-name").value.trim();
+      }
       if(kind==="income"){
         const months=[...document.getElementById("field-month").selectedOptions].map(option=>option.value);
         record.name=document.getElementById("field-name").value.trim();
