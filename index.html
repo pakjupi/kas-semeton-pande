@@ -745,7 +745,7 @@
       let text="• *Catatan Rekap Uang Kas* •\n————————————————\n`Update Terakhir :`\n`"+updateDate+"`\n\n";
 
       text+="• Rekap Pembayaran Uang Kas :\n";
-      typed("member").forEach(member=>{
+      typed("member").sort((a,b)=>clean(b.name).localeCompare(clean(a.name),"id")).forEach(member=>{
         const record=income().find(row=>row.name===member.name);
         const paid=(record?.month_paid||"").split(",").filter(Boolean);
         const indexes=paid.map(month=>MONTHS.indexOf(month)).filter(index=>index>-1);
