@@ -192,7 +192,7 @@
         <p id="report-expense" class="serif mt-2 text-xl font-bold text-[#b75b4b]">Rp0</p>
        </div>
        <div class="rounded-xl bg-[#f0e5d2] p-4">
-        <p data-template-id="report-balance-label" class="canva-text text-sm" style="color: rgb(115, 93, 74); font-weight: 400; font-style: normal; font-size: 14px;">Saldo akhir</p>
+        <p data-template-id="report-balance-label" class="canva-text text-sm" style="color: rgb(115, 93, 74); font-weight: 400; font-style: normal; font-size: 14px;">Saldo kas saat ini</p>
         <p id="report-balance" class="serif mt-2 text-xl font-bold">Rp0</p>
        </div>
       </div>
@@ -207,6 +207,22 @@
        </div>
       </div>
      </article>
+     <div class="admin-only no-print mt-6 rounded-2xl border border-[#e6d8c2] bg-[#faf5ea] p-5 md:p-6">
+      <h4 class="canva-text font-bold" style="color: rgb(61, 41, 29); font-weight: 700; font-style: normal; font-size: 15px;">Kalkulasi Saldo Kas (khusus admin)</h4>
+      <p class="mt-1 text-xs text-[#816f60]">Bagian ini hanya terlihat oleh admin.</p>
+      <form id="atm-balance-form" class="mt-3 flex flex-col gap-3 sm:flex-row sm:items-end">
+       <div class="flex-1">
+        <label for="atm-balance-input" class="mb-1 block text-sm font-bold">Saldo kas ATM</label>
+        <input id="atm-balance-input" type="number" min="0" step="1" class="w-full rounded-xl border border-[#e6d8c2] bg-white px-3 py-3">
+       </div>
+       <button type="submit" class="rounded-xl bg-[#70472d] px-4 py-3 font-bold text-white">Simpan</button>
+      </form>
+      <div class="mt-4 grid gap-3 sm:grid-cols-3 text-sm">
+       <div class="rounded-xl bg-white p-3"><p class="text-xs text-[#816f60]">Saldo kas saat ini</p><p id="calc-current-balance" class="mt-1 font-bold">Rp0</p></div>
+       <div class="rounded-xl bg-white p-3"><p class="text-xs text-[#816f60]">Saldo kas ATM</p><p id="calc-atm-balance" class="mt-1 font-bold">Rp0</p></div>
+       <div class="rounded-xl bg-white p-3"><p class="text-xs text-[#816f60]">Sisa kas di luar ATM</p><p id="calc-outside-balance" class="mt-1 font-bold text-[#70472d]">Rp0</p></div>
+      </div>
+     </div>
     </section>
     <section id="catatan-view" class="view max-w-7xl px-5 md:px-9">
      <div class="no-print flex justify-end"><button type="button" data-action="add-note" class="admin-only flex items-center gap-2 rounded-xl bg-[#70472d] px-4 py-3 font-bold text-white"><i data-lucide="plus" class="w-4"></i><span data-template-id="add-note-label" class="canva-text" style="color: rgb(255, 255, 255); font-weight: 700; font-style: normal; font-size: 15px;">Tambah catatan</span></button>
@@ -336,6 +352,8 @@
     const expense=()=>yearRows("expense");
     const fee=()=>Number(typed("setting").find(r=>String(r.year)===activeYear)?.monthly_fee||0);
     const opening=()=>Number(typed("initial_balance").find(r=>String(r.year)===activeYear)?.initial_balance||0);
+    const atmBalance=()=>Number(typed("atm_balance").find(r=>String(r.year)===activeYear)?.atm_balance||0);
+    const todayStr=()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");};
     const formatDateID=v=>{
       const parts=clean(v).split("-");
       return parts.length===3?Number(parts[2])+"/"+Number(parts[1])+"/"+parts[0]:clean(v);
@@ -495,6 +513,10 @@
       const data=totals();
       ["income","expense","balance"].forEach(key=>document.getElementById("report-"+key).textContent=rupiah(data[key]));
       document.getElementById("report-prev-balance").textContent=rupiah(opening());
+      if(document.activeElement!==document.getElementById("atm-balance-input"))document.getElementById("atm-balance-input").value=atmBalance()||"";
+      document.getElementById("calc-current-balance").textContent=rupiah(data.balance);
+      document.getElementById("calc-atm-balance").textContent=rupiah(atmBalance());
+      document.getElementById("calc-outside-balance").textContent=rupiah(data.balance-atmBalance());
       const months=document.getElementById("report-months");
       const categories=document.getElementById("report-categories");
       months.replaceChildren(); categories.replaceChildren();
@@ -561,7 +583,7 @@
           ?input("Nama anggota","field-name","text",clean(record?.name))+input("Tanggal pembayaran","field-date","date",clean(record?.date)||activeYear+"-01-01")+'<div><label for="field-month" class="mb-1 block text-sm font-bold">Bulan dibayar</label><select id="field-month" multiple required class="h-36 w-full rounded-xl border border-[#e6d8c2] px-3 py-3">'+MONTHS.map(month=>'<option '+(clean(record?.month_paid).split(",").includes(month)?"selected":"")+">"+month+"</option>").join("")+"</select></div>"
           :input("Keterangan","field-description","text",clean(record?.description))+input("Kategori","field-category","text",clean(record?.category))+input("Jumlah","field-amount","number",clean(record?.amount))+input("Tanggal","field-date","date",clean(record?.date)||activeYear+"-01-01");
       }
-      if(kind==="expense")fields.innerHTML=input("Tanggal","field-date","date",clean(record?.date)||activeYear+"-01-01")+input("Keterangan","field-description","text",clean(record?.description))+input("Kategori","field-category","text",clean(record?.category))+input("Jumlah","field-amount","number",clean(record?.amount))+input("Penanggung jawab","field-responsible","text",clean(record?.responsible));
+      if(kind==="expense")fields.innerHTML=input("Tanggal","field-date","date",clean(record?.date)||todayStr())+input("Keterangan","field-description","text",clean(record?.description))+input("Kategori","field-category","text",clean(record?.category))+input("Jumlah","field-amount","number",clean(record?.amount))+input("Penanggung jawab","field-responsible","text",clean(record?.responsible));
       if(kind==="note")fields.innerHTML=input("Judul catatan","field-name","text",clean(record?.name))+'<div><label for="field-note" class="mb-1 block text-sm font-bold">Isi catatan</label><textarea id="field-note" required rows="5" class="w-full rounded-xl border border-[#e6d8c2] px-3 py-3">'+escapeHtml(clean(record?.note_content))+"</textarea></div>";
       document.getElementById("modal").classList.add("open");
     }
@@ -570,11 +592,14 @@
       event.preventDefault();
       if(!isAdmin){toast("Hanya admin yang dapat mengubah pengaturan.");return;}
       if(!sdkReady){toast("Data belum siap.");return;}
+      const fieldMap={setting:"monthly_fee",initial_balance:"initial_balance",atm_balance:"atm_balance"};
+      const inputMap={setting:"monthly-fee",initial_balance:"initial-balance-input",atm_balance:"atm-balance-input"};
+      const labelMap={setting:"Nominal Iuran",initial_balance:"Saldo Awal",atm_balance:"Saldo Kas ATM"};
       const old=typed(type).find(row=>String(row.year)===activeYear);
       const record=blank(type);
-      const input=document.getElementById(type==="setting"?"monthly-fee":"initial-balance-input");
-      record.name=type==="setting"?"Nominal Iuran":"Saldo Awal";
-      record[type==="setting"?"monthly_fee":"initial_balance"]=Number(input.value||0);
+      const input=document.getElementById(inputMap[type]);
+      record.name=labelMap[type];
+      record[fieldMap[type]]=Number(input.value||0);
       const button=event.submitter;
       button.disabled=true;
       const result=old?await window.dataSdk.update({...old,...record}):await window.dataSdk.create(record);
@@ -649,6 +674,7 @@
 
     document.getElementById("fee-form").addEventListener("submit",event=>saveSetting(event,"setting"));
     document.getElementById("initial-balance-form").addEventListener("submit",event=>saveSetting(event,"initial_balance"));
+    document.getElementById("atm-balance-form").addEventListener("submit",event=>saveSetting(event,"atm_balance"));
 
     document.getElementById("year-input").addEventListener("change",event=>{
       const year=String(event.target.value);
